@@ -136,7 +136,7 @@ class AnomalibDataset(Dataset, ABC):
 
             item["image"] = transformed["image"]
             item["mask_path"] = mask_path
-            item["mask"] = transformed["mask"].float()
+            item["mask"] = transformed["mask"]
 
             if self.task == TaskType.DETECTION:
                 # create boxes from masks for detection task
