@@ -1,14 +1,14 @@
 dataset:
-  name: mvtec
+  name: hp
   format: mvtec
-  path: ./datasets/MVTec
-  category: bottle
+  path: ./datasets/hp
   task: segmentation
-  train_batch_size: 32
-  eval_batch_size: 32
+  category: cartridge
+  train_batch_size: 8
+  test_batch_size: 8
   num_workers: 8
-  image_size: 256 # dimensions to which images are resized (mandatory)
-  center_crop: null # dimensions to which images are center-cropped after resizing (optional)
+  image_size: 128 # dimensions to which images are resized (mandatory)
+  center_crop: 128 # dimensions to which images are center-cropped after resizing (optional)
   normalization: imagenet # data distribution to which the images will be normalized: [none, imagenet]
   transform_config:
     train: null
@@ -26,14 +26,15 @@ dataset:
     random_tile_count: 16
 
 model:
-  name: padim
-  backbone: resnet18
+  name: patchcore
+  backbone: wide_resnet50_2
   pre_trained: true
   layers:
-    - layer1
     - layer2
     - layer3
-  normalization_method: min_max # options: [none, min_max, cdf]
+  coreset_sampling_ratio: 0.1
+  num_neighbors: 9
+  normalization_method: min_max # options: [null, min_max, cdf]
 
 metrics:
   image:
@@ -55,7 +56,7 @@ visualization:
   mode: full # options: ["full", "simple"]
 
 project:
-  seed: 42
+  seed: 0
   path: ./results
 
 logging:
@@ -63,7 +64,7 @@ logging:
   log_graph: false # Logs the model graph to respective logger.
 
 optimization:
-  export_mode: null # options: torch, onnx, openvino
+  export_mode: null # options: onnx, openvino
 
 # PL Trainer Args. Don't add extra parameter here.
 trainer:
@@ -79,7 +80,7 @@ trainer:
   check_val_every_n_epoch: 1 # Don't validate before extracting features.
   fast_dev_run: false
   accumulate_grad_batches: 1
-  max_epochs: 1
+  max_epochs: 3
   min_epochs: null
   max_steps: -1
   min_steps: null

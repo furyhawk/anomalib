@@ -38,7 +38,7 @@ class PRO(Metric):
         target = dim_zero_cat(self.target)
         preds = dim_zero_cat(self.preds)
 
-        if target.is_cuda:
+        if target.is_cuda or torch.backends.mps.is_available():
             comps = connected_components_gpu(target.unsqueeze(1))
         else:
             comps = connected_components_cpu(target.unsqueeze(1))

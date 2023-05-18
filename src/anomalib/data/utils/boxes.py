@@ -30,7 +30,7 @@ def masks_to_boxes(masks: Tensor, anomaly_maps: Tensor | None = None) -> tuple[l
     if anomaly_maps is not None:
         anomaly_maps = anomaly_maps.view((-1,) + masks.shape[-2:])
 
-    if masks.is_cuda:
+    if masks.is_cuda or torch.backends.mps.is_available():
         batch_comps = connected_components_gpu(masks).squeeze(1)
     else:
         batch_comps = connected_components_cpu(masks).squeeze(1)

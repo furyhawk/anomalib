@@ -80,7 +80,7 @@ class AUPRO(Metric):
             )
         target = target.unsqueeze(1)  # kornia expects N1HW format
         target = target.type(torch.float)  # kornia expects FloatTensor
-        if target.is_cuda:
+        if target.is_cuda or torch.backends.mps.is_available():
             cca = connected_components_gpu(target)
         else:
             cca = connected_components_cpu(target)
