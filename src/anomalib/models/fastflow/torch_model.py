@@ -41,10 +41,15 @@ def subnet_conv_func(kernel_size: int, hidden_ratio: float) -> Callable:
 
     def subnet_conv(in_channels: int, out_channels: int) -> nn.Sequential:
         hidden_channels = int(in_channels * hidden_ratio)
+        # NOTE: setting padding="same" in nn.Conv2d breaks the onnx export so manual padding required.
+        # TODO: Use padding="same" in nn.Conv2d once PyTorch v2.1 is released
+        padding = 2 * (kernel_size // 2 - ((1 + kernel_size) % 2), kernel_size // 2)
         return nn.Sequential(
-            nn.Conv2d(in_channels, hidden_channels, kernel_size, padding="same"),
+            nn.ZeroPad2d(padding),
+            nn.Conv2d(in_channels, hidden_channels, kernel_size),
             nn.ReLU(),
-            nn.Conv2d(hidden_channels, out_channels, kernel_size, padding="same"),
+            nn.ZeroPad2d(padding),
+            nn.Conv2d(hidden_channels, out_channels, kernel_size),
         )
 
     return subnet_conv
@@ -93,12 +98,12 @@ class FastflowModel(nn.Module):
     Unsupervised Anomaly Detection and Localization via 2D Normalizing Flows.
 
     Args:
-        input_size (tuple[int, int]): Model input size.
-        backbone (str): Backbone CNN network
-        pre_trained (bool, optional): Boolean to check whether to use a pre_trained backbone.
-        flow_steps (int, optional): Flow steps.
+        input_size (tuple[int, int]): Model input size. Defaults to (384, 384).
+        backbone (str): Backbone CNN network. Defaults to "deit_base_distilled_patch16_384".
+        pre_trained (bool, optional): Boolean to check whether to use a pre_trained backbone. Defaults to True.
+        flow_steps (int, optional): Flow steps. Defaults to 20.
+        hidden_ratio (float, optional): Ratio to calculate hidden var channels. Defaults to 0.16.
         conv3x3_only (bool, optinoal): Use only conv3x3 in fast_flow model. Defaults to False.
-        hidden_ratio (float, optional): Ratio to calculate hidden var channels. Defaults to 1.0.
 
     Raises:
         ValueError: When the backbone is not supported.
@@ -106,12 +111,12 @@ class FastflowModel(nn.Module):
 
     def __init__(
         self,
-        input_size: tuple[int, int],
-        backbone: str,
+        input_size: tuple[int, int] = (384, 384),
+        backbone: str = "deit_base_distilled_patch16_384",
         pre_trained: bool = True,
-        flow_steps: int = 8,
+        flow_steps: int = 20,
+        hidden_ratio: float = 0.16,
         conv3x3_only: bool = False,
-        hidden_ratio: float = 1.0,
     ) -> None:
         super().__init__()
 
